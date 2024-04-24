@@ -1,8 +1,8 @@
 import os
 import shutil
-import tkinter as tk
-from tkinter import filedialog, messagebox, simpledialog
 import json
+import tkinter as tk
+from tkinter import filedialog, messagebox
 
 # グローバル設定ファイルのパス
 config_file = 'app_config.json'
@@ -16,7 +16,13 @@ def load_or_initialize_config():
     else:
         # 初期設定: ファイル名リストがない場合には作成する
         if not os.path.exists(default_filenames):
-            open(default_filenames, 'a').close()
+            with open(default_filenames, 'w') as f:
+                # 簡単な例をファイル名リストに記述
+                f.write("example_copy1\n")
+                f.write("example_copy2\n")
+                f.write("example_copy3\n")
+            messagebox.showinfo("初期設定", "初期のファイル名リストが作成されました。プログラムを再起動してください。")
+            return None  # 初期設定後はプログラムを終了するためにNoneを返す
         config = {
             'filename_list': default_filenames,
             'last_source_dir': '',
@@ -41,10 +47,11 @@ def select_destination_dir(initialdir):
 
 # ファイルのコピーと存在チェック
 def copy_files(source_file, destination_dir, filename_list):
+    _, file_extension = os.path.splitext(source_file)  # 元のファイルの拡張子を取得
     try:
         with open(filename_list, 'r') as file:
             for line in file:
-                new_filename = line.strip()
+                new_filename = line.strip() + file_extension  # 新しいファイル名に拡張子を追加
                 if new_filename:
                     destination_path = os.path.join(destination_dir, new_filename)
                     if os.path.exists(destination_path):
@@ -59,6 +66,9 @@ def copy_files(source_file, destination_dir, filename_list):
 
 def main():
     config = load_or_initialize_config()
+    if config is None:
+        return  # 初期設定の後はプログラムを終了する
+
     source_file = select_source_file(config['last_source_dir'])
     if source_file:
         config['last_source_dir'] = os.path.dirname(source_file)
@@ -72,3 +82,4 @@ if __name__ == "__main__":
     root = tk.Tk()
     root.withdraw()  # メインウィンドウを非表示
     main()
+    root.destroy()  # GUIの終了
